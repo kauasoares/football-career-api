@@ -229,7 +229,7 @@ As capturas de 02/11/2026 registram a VM `vm-football-career` no grupo `rg-footb
 
 O terminal mostra a instalação em `/opt/football-career-api`, serviço `football-career-api.service`, Python 3.12.3, FastAPI 0.115.6 e Uvicorn 0.32.1. Os prints incluem Swagger público, integridade do SQLite, backup criado e consulta a uma cópia restaurada. Não há captura de execução de pytest ou de agendamento por cron.
 
-O relatório técnico resumido tem 15 páginas e 18 figuras selecionadas entre os prints recebidos. As imagens do frontend registram o layout anterior às melhorias finais; as telas de erro estão identificadas como etapas de diagnóstico. Dois recortes sem conteúdo legível foram excluídos.
+O relatório técnico resumido tem 16 páginas, 18 prints selecionados e dois esquemas visuais: arquitetura da aplicação e relacionamentos do SQLite. Inclui explicações de SKU, armazenamento e linguagens utilizadas. As imagens do frontend registram o layout anterior às melhorias finais; as telas de erro estão identificadas como etapas de diagnóstico. Dois recortes sem conteúdo legível foram excluídos.
 
 ## Implantação de referência no Azure (Ubuntu 24.04)
 
