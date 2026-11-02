@@ -1,0 +1,180 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Football Career | Legacy</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <script src="./js/api.js" defer></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">FC</div>
+        <div>
+          <strong>FOOTBALL</strong>
+          <small>CAREER LEGACY</small>
+        </div>
+      </div>
+
+      <p class="nav-label">MENU PRINCIPAL</p>
+      <button class="nav-btn active" data-page="home">⌂ Início</button>
+      <button class="nav-btn" data-page="new">＋ Nova carreira</button>
+      <button class="nav-btn" data-page="continue">◷ Continuar carreira</button>
+
+      <div class="sidebar-bottom">
+        <span class="status-dot"></span>
+        <span id="api-status">Conectando à API...</span>
+        <small>Azure Cloud · FastAPI</small>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <span class="eyebrow">FOOTBALL CAREER / LEGACY</span>
+          <h1 id="page-title">Sua história começa aqui.</h1>
+        </div>
+        <div class="top-tag">SEASON MODE <b>26</b></div>
+      </header>
+
+      <div id="message" class="message hidden" role="alert"></div>
+
+      <section id="home" class="page">
+        <div class="hero">
+          <div class="hero-content">
+            <span class="eyebrow green">THE NEXT GENERATION OF CAREER</span>
+            <h2>O FUTURO DO<br><em>FUTEBOL É SEU.</em></h2>
+            <p>Assuma o comando de um clube ou construa
+              sua trajetória como jogador profissional.</p>
+            <button class="primary-btn" data-page="new">
+              COMEÇAR MINHA CARREIRA ↗
+            </button>
+          </div>
+          <div class="hero-art">⚽</div>
+        </div>
+
+        <div class="section-heading">
+          <h3>ESCOLHA SEU CAMINHO</h3>
+          <span>DOIS MODOS. UMA HISTÓRIA.</span>
+        </div>
+
+        <div class="mode-grid">
+          <button class="mode-card" data-mode="MANAGER">
+            <span class="mode-number">01 / MANAGER</span>
+            <span class="mode-art">▦</span>
+            <strong>MODO TÉCNICO</strong>
+            <p>Controle o clube, defina táticas, gerencie
+               o elenco e conquiste o campeonato.</p>
+            <span class="card-link">INICIAR CARREIRA ↗</span>
+          </button>
+
+          <button class="mode-card player-card" data-mode="PLAYER">
+            <span class="mode-number">02 / PLAYER</span>
+            <span class="mode-art">★</span>
+            <strong>MODO JOGADOR</strong>
+            <p>Crie seu atleta, evolua seu overall e construa
+               uma carreira rumo ao estrelato.</p>
+            <span class="card-link">CRIAR MEU JOGADOR ↗</span>
+          </button>
+        </div>
+      </section>
+
+      <section id="new" class="page hidden">
+        <div class="section-heading">
+          <h3>NOVA CARREIRA</h3>
+          <span>DEFINA SEU LEGADO</span>
+        </div>
+
+        <div class="form-panel">
+          <label>Escolha seu modo</label>
+          <div class="mode-selector">
+            <button class="choice selected" data-select="MANAGER">
+              MODO TÉCNICO
+            </button>
+            <button class="choice" data-select="PLAYER">
+              MODO JOGADOR
+            </button>
+          </div>
+
+          <form id="career-form">
+            <label for="career-name">Nome da carreira</label>
+            <input id="career-name" maxlength="40"
+              minlength="2" required
+              placeholder="Ex.: Minha Jornada" />
+
+            <div id="manager-fields">
+              <label for="club">Escolha seu clube</label>
+              <select id="club">
+                <option value="">Carregando clubes...</option>
+              </select>
+            </div>
+
+            <div id="player-fields" class="hidden">
+              <label for="player-name">Nome do jogador</label>
+              <input id="player-name" maxlength="40"
+                placeholder="Ex.: Meu Craque" />
+
+              <div class="form-row">
+                <div>
+                  <label for="age">Idade</label>
+                  <input id="age" type="number"
+                    min="16" max="21" value="18" />
+                </div>
+                <div>
+                  <label for="position">Posição</label>
+                  <select id="position">
+                    <option value="ATT">Atacante</option>
+                    <option value="MID">Meio-campista</option>
+                    <option value="DEF">Defensor</option>
+                    <option value="GK">Goleiro</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <button id="create-btn" class="primary-btn submit-btn"
+              type="submit">CRIAR CARREIRA ↗</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="continue" class="page hidden">
+        <div class="section-heading">
+          <h3>SUAS CARREIRAS</h3>
+          <button class="small-btn" id="refresh-careers">
+            ATUALIZAR ↻
+          </button>
+        </div>
+        <div id="career-list" class="career-list">
+          Carregando carreiras...
+        </div>
+      </section>
+
+      <section id="dashboard" class="page hidden">
+        <div class="section-heading">
+          <h3>VISÃO GERAL DA CARREIRA</h3>
+          <span id="career-mode-label">MODO CARREIRA</span>
+        </div>
+        <div id="dashboard-content"></div>
+        <div class="dashboard-actions">
+          <button id="advance-btn" class="primary-btn">
+            SIMULAR PRÓXIMA RODADA ⚽
+          </button>
+          <button id="back-careers" class="small-btn">
+            OUTRAS CARREIRAS
+          </button>
+        </div>
+        <h3 class="subheading">CLASSIFICAÇÃO</h3>
+        <div id="standings" class="table-wrap"></div>
+      </section>
+
+      <footer>
+        FOOTBALL CAREER LEGACY · PROJETO ACADÊMICO · FIAP
+      </footer>
+    </main>
+  </div>
+</body>
+</html>
