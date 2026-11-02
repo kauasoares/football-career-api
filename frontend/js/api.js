@@ -224,6 +224,12 @@ async function openCareer(id) {
       career.status !== "ACTIVE" || career.season_finished;
 
     await loadStandings(id, career.team?.id);
+    if (career.mode === "MANAGER") {
+      await loadSquad(id);
+    } else {
+      $("#squad-section").classList.add("hidden");
+    }
+    await loadFixtures(id);
   } catch (err) {
     notify(err.message);
   }
