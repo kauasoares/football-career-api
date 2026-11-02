@@ -2,6 +2,12 @@
 let squadData = null;
 let selectedStarters = new Set();
 let rosterCareerId = null;
+let rosterEnabled = true;
+function setRosterEnabled(enabled) {
+  rosterEnabled = enabled;
+  document.querySelectorAll("#squad-section button, #squad-section select").forEach(el => el.disabled = !enabled);
+  if(enabled && squadData) document.querySelector("#save-lineup").disabled = !eligibleLineup(selectedStarters);
+}
 const FORMATION_SLOTS = {"4-3-3": {GK:1,DEF:4,MID:3,ATT:3},"4-4-2":{GK:1,DEF:4,MID:4,ATT:2},"3-5-2":{GK:1,DEF:3,MID:5,ATT:2}};
 const POS_ORDER = ["ATT","MID","DEF","GK"];
 const POSITION_NAME = {GK:"Goleiro",DEF:"Defensor",MID:"Meio-campo",ATT:"Atacante"};
@@ -24,7 +30,7 @@ function autofillLineup(){
   const slots=currentSlots();
   for(const pos of ["GK","DEF","MID","ATT"]){
     const ranked=squadData.squad.filter(p=>p.position===pos)
-      .sort((a,b)=>(Number(b.starter)-Number(a.starter)) || b.rating-a.rating);
+      .sort((a,b)=>b.rating-a.rating);
     ranked.slice(0,slots[pos]).forEach(p=>selectedStarters.add(p.id));
   }
   renderRoster();
@@ -35,7 +41,9 @@ async function loadSquad(cid){
   panel.classList.remove("hidden");
   panel.setAttribute("aria-busy","true");
   try {
-    squadData=await request("/careers/"+cid+"/squad");
+    const data=await request("/careers/"+cid+"/squad");
+    if(currentCareerId!==cid || activeCareer?.mode!=="MANAGER") return;
+    squadData=data;
     document.querySelector("#formation-select").value=squadData.formation;
     document.querySelector("#tactic-select").value=squadData.tactic;
     const actual=new Set(squadData.squad.filter(p=>p.starter).map(p=>p.id));
@@ -58,7 +66,8 @@ function renderRoster(){
     row.setAttribute("aria-label",names[pos]);
     squadData.squad.filter(p=>selectedStarters.has(p.id)&&p.position===pos)
       .forEach(p=>{
-        const slot=document.createElement("div");slot.className="pitch-player";
+        const slot=document.createElement("div");slot.className="pitch-player pos-"+pos;
+        slot.title=p.name+" · "+POSITION_NAME[pos]+" · Overall "+p.rating;
         const shirt=document.createElement("div");shirt.className="pitch-shirt";
         shirt.textContent=p.rating;
         const label=document.createElement("span");label.textContent=p.name;
@@ -74,7 +83,7 @@ function renderRoster(){
     const active=selectedStarters.has(p.id);
     const card=document.createElement("button");
     card.type="button";
-    card.className="roster-card"+(active?" on-field":"");
+    card.className="roster-card pos-"+p.position+(active?" on-field":"");
     card.setAttribute("aria-pressed",String(active));
     card.innerHTML='<span class="roster-badge">'+(active?"TITULAR":"RESERVA")+
       '</span><span class="roster-rating">'+escapeHTML(p.rating)+
@@ -87,7 +96,7 @@ function renderRoster(){
   }
   const valid=eligibleLineup(selectedStarters);
   const button=document.querySelector("#save-lineup");
-  button.disabled=!valid;
+  button.disabled=!valid || !rosterEnabled;
   const summary=Object.entries(currentSlots()).map(([pos,num])=>{
     const current=squadData.squad.filter(p=>selectedStarters.has(p.id)&&p.position===pos).length;
     return pos+": "+current+"/"+num;
@@ -96,7 +105,7 @@ function renderRoster(){
   document.querySelector("#selection-count").classList.toggle("invalid",!valid);
 }
 function toggleStarter(id){
-  if(busy||!squadData)return;
+  if(busy||!rosterEnabled||!squadData)return;
   const p=squadData.squad.find(p=>p.id===id);
   if(!p)return;
   if(selectedStarters.has(id))selectedStarters.delete(id);
@@ -112,7 +121,7 @@ function toggleStarter(id){
   renderRoster();
 }
 async function saveLineup(){
-  if(busy||rosterCareerId===null||!squadData)return;
+  if(busy||!rosterEnabled||rosterCareerId===null||!squadData)return;
   if(!eligibleLineup(selectedStarters)) {
     rosterMessage("A escalação precisa ter exatamente 11 atletas nas posições da formação.",true);
     return;
@@ -129,18 +138,19 @@ async function saveLineup(){
     rosterMessage("Escalação e tática salvas com sucesso!");
     notify("Escalação salva!",true);
   }catch(e){rosterMessage(e.message,true)}
-  finally{busy=false;button.disabled=false}
+  finally{busy=false;button.disabled=!rosterEnabled||!eligibleLineup(selectedStarters)}
 }
 async function loadFixtures(cid){
   const area=document.querySelector("#fixtures-list");
   area.textContent="Carregando partidas...";
   try {
     const data=await request("/careers/"+cid+"/fixtures?mine=true");
+    if(currentCareerId!==cid) return;
     area.replaceChildren();
     if(!data.length){area.textContent="Nenhuma partida encontrada.";return}
     for(const fixture of data){
-      const item=document.createElement("div");item.className="fixture-item";
-      const round=document.createElement("span");round.className="fixture-round";round.textContent="RODADA "+fixture.round;
+      const item=document.createElement("div");item.className="fixture-item"+(!fixture.played && fixture.round===activeCareer?.round ? " next-match" : "");
+      const round=document.createElement("span");round.className="fixture-round";round.textContent="RODADA "+fixture.round+(!fixture.played && fixture.round===activeCareer?.round ? " · PRÓXIMA" : "");
       const matchup=document.createElement("strong");
       matchup.textContent=fixture.home+" × "+fixture.away;
       const score=document.createElement("span");score.className="fixture-score";

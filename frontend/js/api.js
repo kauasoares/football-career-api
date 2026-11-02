@@ -3,6 +3,8 @@ const API = "";
 let selectedMode = "MANAGER";
 let currentCareerId = null;
 let busy = false;
+let activeCareer = null;
+let dashboardVersion = 0;
 
 const $ = (selector) => document.querySelector(selector);
 
@@ -183,7 +185,11 @@ function stat(label, value) {
 async function openCareer(id) {
   try {
     const career = await request(`/careers/${id}`);
+    if (version !== dashboardVersion) return;
+    activeCareer = career;
     currentCareerId = career.id;
+    $("#player-section").classList.add("hidden");
+    $("#squad-section").classList.add("hidden");
     showPage("dashboard");
 
     $("#career-mode-label").textContent =
@@ -221,14 +227,19 @@ async function openCareer(id) {
 
     $("#dashboard-content").innerHTML = html;
     $("#advance-btn").disabled =
-      career.status !== "ACTIVE" || career.season_finished;
+      career.status !== "ACTIVE";
+    $("#advance-btn").textContent = career.season_finished ? "INICIAR PRÓXIMA TEMPORADA ↗" : "SIMULAR PRÓXIMA RODADA ⚽";
 
     await loadStandings(id, career.team?.id);
+    if (version !== dashboardVersion) return;
     if (career.mode === "MANAGER") {
       await loadSquad(id);
+      setRosterEnabled(career.status === "ACTIVE");
     } else {
       $("#squad-section").classList.add("hidden");
+      await loadPlayerCareer(career);
     }
+    if (version !== dashboardVersion) return;
     await loadFixtures(id);
   } catch (err) {
     notify(err.message);
@@ -238,6 +249,7 @@ async function openCareer(id) {
 async function loadStandings(id, teamId) {
   try {
     const rows = await request(`/careers/${id}/standings`);
+    if (id !== currentCareerId) return;
     const table = document.createElement("table");
     table.innerHTML = `
       <thead><tr>
@@ -267,22 +279,23 @@ async function loadStandings(id, teamId) {
 
 async function advanceRound() {
   if (busy || currentCareerId === null) return;
-  if (!confirm("Simular a próxima rodada? Esta ação altera a carreira.")) return;
+  if (!confirm(activeCareer?.season_finished ? "Encerrar esta temporada e iniciar a próxima?" : "Simular a próxima rodada? Esta ação altera a carreira.")) return;
 
   busy = true;
   $("#advance-btn").disabled = true;
 
   try {
     const result = await request(
-      `/careers/${currentCareerId}/advance?rounds=1`,
+      activeCareer?.season_finished ? `/careers/${currentCareerId}/next-season` : `/careers/${currentCareerId}/advance?rounds=1`,
       { method: "POST" }
     );
     await openCareer(currentCareerId);
-    notify(`Simulação concluída! Temporada ${result.season}.`, true);
+    notify(result.message || `Carreira atualizada! Temporada ${result.next_season || result.season}.`, true);
   } catch (err) {
     notify(err.message);
   } finally {
     busy = false;
+    $("#advance-btn").disabled = activeCareer?.status !== "ACTIVE";
   }
 }
 
