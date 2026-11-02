@@ -205,7 +205,7 @@ O script `backup_db.py` utiliza a API de backup do próprio SQLite para criar um
 Execução manual:
 
 ```bash
-DB_PATH=/opt/football-api/data/career.db \
+DB_PATH=/opt/football-career-api/data/career.db \
 BACKUP_DIR=/var/backups/football-api \
 BACKUP_RETENTION_DAYS=14 \
 python backup_db.py
@@ -214,16 +214,24 @@ python backup_db.py
 Para restaurar, pare o serviço, mantenha uma cópia do banco atual e substitua o arquivo pelo backup validado:
 
 ```bash
-sudo systemctl stop football-api
-sudo cp /opt/football-api/data/career.db /opt/football-api/data/career.db.pre-restore
-sudo cp /var/backups/football-api/career-AAAAmmddTHHMMSSZ.db /opt/football-api/data/career.db
-sudo chown azureuser:azureuser /opt/football-api/data/career.db
-sudo systemctl start football-api
+sudo systemctl stop football-career-api
+sudo cp /opt/football-career-api/data/career.db /opt/football-career-api/data/career.db.pre-restore
+sudo cp /var/backups/football-api/career-AAAAmmddTHHMMSSZ.db /opt/football-career-api/data/career.db
+sudo chown azureuser:azureuser /opt/football-career-api/data/career.db
+sudo systemctl start football-career-api
 ```
 
 Ajuste usuário, diretórios e nome do arquivo ao ambiente real. É recomendável testar a restauração antes de depender do backup.
 
-## Implantação de referência no Azure (Ubuntu 22.04)
+## Ambiente registrado nas evidências
+
+As capturas de 02/11/2026 registram a VM `vm-football-career` no grupo `rg-football-career`, região Canada Central, assinatura Azure for Students. Na criação foram selecionados Ubuntu Server 24.04 LTS x64 Gen2, Standard_B2ats_v2 (2 vCPUs e 1 GiB) e SSD Standard com imagem padrão de 30 GiB. O IP público registrado é `20.104.57.183`; sua disponibilidade atual não foi verificada nesta documentação.
+
+O terminal mostra a instalação em `/opt/football-career-api`, serviço `football-career-api.service`, Python 3.12.3, FastAPI 0.115.6 e Uvicorn 0.32.1. Os prints incluem Swagger público, integridade do SQLite, backup criado e consulta a uma cópia restaurada. Não há captura de execução de pytest ou de agendamento por cron.
+
+O relatório técnico resumido tem 15 páginas e 18 figuras selecionadas entre os prints recebidos. As imagens do frontend registram o layout anterior às melhorias finais; as telas de erro estão identificadas como etapas de diagnóstico. Dois recortes sem conteúdo legível foram excluídos.
+
+## Implantação de referência no Azure (Ubuntu 24.04)
 
 O roteiro abaixo serve como referência para a atividade. Os campos de Resource Group, região, SKU, IP e disco devem ser preenchidos com os valores reais apresentados no portal Azure. O README não comprova que o deploy já foi executado.
 
@@ -232,7 +240,7 @@ O roteiro abaixo serve como referência para a atividade. Os campos de Resource 
 Registre ou crie os seguintes componentes:
 
 - Resource Group;
-- VM com Ubuntu Server 22.04 LTS e a SKU escolhida;
+- VM com Ubuntu Server 24.04 LTS e a SKU escolhida;
 - OS Disk (tipo e capacidade);
 - VNet e interface de rede (NIC);
 - IP público;
@@ -247,10 +255,10 @@ ssh azureuser@<IP_PUBLICO>
 sudo apt update
 sudo apt install -y python3-venv nginx git
 
-sudo mkdir -p /opt/football-api
-sudo chown "$USER":"$USER" /opt/football-api
-git clone --branch master https://github.com/kauasoares/football-career-api.git /opt/football-api
-cd /opt/football-api
+sudo mkdir -p /opt/football-career-api
+sudo chown "$USER":"$USER" /opt/football-career-api
+git clone --branch master https://github.com/kauasoares/football-career-api.git /opt/football-career-api
+cd /opt/football-career-api
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 mkdir -p data
@@ -258,7 +266,7 @@ mkdir -p data
 
 ### 3. Serviço systemd
 
-Crie `/etc/systemd/system/football-api.service`:
+Crie `/etc/systemd/system/football-career-api.service`:
 
 ```ini
 [Unit]
@@ -267,9 +275,9 @@ After=network.target
 
 [Service]
 User=azureuser
-WorkingDirectory=/opt/football-api
-Environment=DB_PATH=/opt/football-api/data/career.db
-ExecStart=/opt/football-api/.venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000
+WorkingDirectory=/opt/football-career-api
+Environment=DB_PATH=/opt/football-career-api/data/career.db
+ExecStart=/opt/football-career-api/.venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000
 Restart=always
 RestartSec=3
 
@@ -281,8 +289,8 @@ Ative e valide:
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable --now football-api
-systemctl status football-api
+sudo systemctl enable --now football-career-api
+systemctl status football-career-api
 ```
 
 ### 4. Nginx para o frontend e a API
@@ -294,7 +302,7 @@ server {
     listen 80;
     server_name _;
 
-    root /opt/football-api/frontend;
+    root /opt/football-career-api/frontend;
     index index.html;
 
     location / {
@@ -320,7 +328,7 @@ sudo nginx -t
 sudo systemctl restart nginx
 ```
 
-O bloco acima é uma configuração de referência, não uma alteração automática da VM. Ajuste o caminho `/opt/football-api` ao diretório realmente instalado, por exemplo `/opt/football-career-api`. O usuário do Nginx precisa conseguir ler o diretório `frontend/`. Não abra o HTML diretamente pelo protocolo `file://`: o frontend espera rotas HTTP da API na mesma origem.
+O bloco acima é uma configuração de referência, não uma alteração automática da VM. Ajuste o caminho `/opt/football-career-api` ao diretório realmente instalado, por exemplo `/opt/football-career-api`. O usuário do Nginx precisa conseguir ler o diretório `frontend/`. Não abra o HTML diretamente pelo protocolo `file://`: o frontend espera rotas HTTP da API na mesma origem.
 
 ### 5. Validação do frontend e da API
 
@@ -345,7 +353,7 @@ crontab -e
 Adicione uma execução diária às 02h:
 
 ```cron
-0 2 * * * DB_PATH=/opt/football-api/data/career.db BACKUP_DIR=/var/backups/football-api BACKUP_RETENTION_DAYS=14 /opt/football-api/.venv/bin/python /opt/football-api/backup_db.py >> /home/azureuser/football-api-backup.log 2>&1
+0 2 * * * DB_PATH=/opt/football-career-api/data/career.db BACKUP_DIR=/var/backups/football-api BACKUP_RETENTION_DAYS=14 /opt/football-career-api/.venv/bin/python /opt/football-career-api/backup_db.py >> /home/azureuser/football-api-backup.log 2>&1
 ```
 
 ## Atualização do frontend na instalação existente
@@ -362,7 +370,7 @@ Se aparecer `version is not defined` ao continuar uma carreira, confirme que a i
 
 ## Documentação e evidências
 
-A documentação técnica está disponível em [Word](Football_Career_API_Documentacao_Tecnica.docx) e [PDF](Football_Career_API_Documentacao_Tecnica.pdf). Prints do ambiente devem ser apresentados com legenda e contexto, distinguindo a interface anterior da versão atual. Diagramas explicativos não substituem evidências de execução.
+A documentação técnica atualizada reúne arquitetura, contratos da API, manual dos modos técnico e jogador, configuração de referência, backup e evidências legendadas. A entrega revisada está disponível em [PDF](Football_Career_API_Documentacao_Tecnica.pdf). O arquivo Word existente no histórico do projeto é uma versão anterior e não integra esta revisão. Prints do ambiente devem ser apresentados com legenda e contexto, distinguindo a interface anterior da versão atual. Diagramas explicativos não substituem evidências de execução.
 
 ## Escopo acadêmico e observações
 
