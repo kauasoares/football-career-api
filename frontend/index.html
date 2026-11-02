@@ -6,7 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Football Career | Legacy</title>
   <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/tactics.css">
   <script src="./js/api.js" defer></script>
+  <script src="./js/tactics.js" defer></script>
 </head>
 <body>
   <div class="app">
@@ -169,6 +171,40 @@
         </div>
         <h3 class="subheading">CLASSIFICAÇÃO</h3>
         <div id="standings" class="table-wrap"></div>
+        <section id="squad-section" class="squad-section hidden">
+          <div class="section-heading"><h3>CENTRAL TÁTICA</h3><span>ELENCO & FORMAÇÃO</span></div>
+          <div class="tactics-panel">
+            <div class="tactics-controls">
+              <div><label for="formation-select">Formação</label>
+                <select id="formation-select">
+                  <option value="4-3-3">4-3-3</option>
+                  <option value="4-4-2">4-4-2</option>
+                  <option value="3-5-2">3-5-2</option>
+                </select>
+              </div>
+              <div><label for="tactic-select">Estilo de jogo</label>
+                <select id="tactic-select">
+                  <option value="BALANCED">Equilibrado</option>
+                  <option value="ATTACK">Ofensivo</option>
+                  <option value="DEFENSE">Defensivo</option>
+                </select>
+              </div>
+            </div>
+            <div id="tactical-field" class="tactical-field" aria-label="Campo e titulares selecionados"></div>
+            <p id="selection-count" aria-live="polite"></p>
+            <p id="roster-feedback" class="roster-feedback" role="status" aria-live="polite"></p>
+            <div class="tactics-actions">
+              <button id="auto-lineup" class="small-btn">ESCALAÇÃO AUTOMÁTICA</button>
+              <button id="save-lineup" class="primary-btn">SALVAR ESCALAÇÃO E TÁTICA</button>
+            </div>
+          </div>
+          <h3 class="subheading">JOGADORES DO ELENCO</h3>
+          <div id="squad-cards" class="squad-grid"></div>
+        </section>
+        <section class="fixture-section">
+          <div class="section-heading"><h3>CALENDÁRIO DE JOGOS</h3><span>PARTIDAS DA SUA EQUIPE</span></div>
+          <div id="fixtures-list" class="fixtures-list"></div>
+        </section>
       </section>
 
       <footer>
