@@ -1,6 +1,6 @@
-# ⚽ Football Career API
+# ⚽ Football Career Legacy
 
-API REST de um modo carreira de futebol, com dois estilos de jogo: **modo técnico** e **modo jogador**. O projeto foi desenvolvido para fins acadêmicos e utiliza Python, FastAPI e SQLite. Pode ser executado localmente ou hospedado em uma VM Linux no Microsoft Azure.
+Aplicação web de modo carreira de futebol, com frontend em HTML, CSS e JavaScript e API REST em Python, com dois estilos de jogo: **modo técnico** e **modo jogador**. O projeto foi desenvolvido para fins acadêmicos e utiliza Python, FastAPI e SQLite. Pode ser executado localmente ou hospedado em uma VM Linux no Microsoft Azure.
 
 ## Visão geral
 
@@ -22,6 +22,39 @@ API REST de um modo carreira de futebol, com dois estilos de jogo: **modo técni
 | Nginx | Proxy reverso na VM Linux |
 | systemd | Inicialização e supervisão do serviço |
 | pytest + httpx | Testes automatizados |
+
+## Interface web
+
+O frontend está em `frontend/` e consome a API na mesma origem (`const API = ""`). O backend não publica arquivos estáticos: o servidor web deve servir o frontend e encaminhar as rotas da API para o Uvicorn.
+
+### Funções disponíveis
+
+| Área | Interface web |
+|---|---|
+| Carreiras | Criar técnico ou jogador, listar e continuar carreiras salvas |
+| Jogo | Simular uma rodada com confirmação e iniciar a próxima temporada |
+| Liga | Classificação com destaque do clube e calendário da equipe com placares |
+| Técnico | Orçamento, confiança, formação, tática, campo e cards por posição |
+| Escalação | Escolher titulares nos cards, conferir limites por posição e salvar |
+| Jogador | Perfil, overall, potencial, idade, clube e valor de mercado |
+| Estatísticas | Jogos, gols, assistências e nota média da temporada e da carreira |
+| Histórico | Desempenho do jogador por temporada |
+| Transferências do jogador | Estado da janela, propostas, papel no elenco, força e última classificação do clube; aceitação com confirmação |
+
+Os totais incluem a temporada atual. A nota média de carreira é calculada no frontend ponderando as médias por quantidade de jogos; pode apresentar pequenas diferenças de arredondamento porque a API já arredonda as médias de cada temporada. Antes da primeira partida, a nota aparece como “—”.
+
+As propostas são geradas na transição para uma nova temporada; uma janela aberta não garante ofertas. O botão de aceitar exige carreira ativa, janela aberta e proposta pendente. A aceitação muda o clube e recusa as demais propostas pendentes. A interface atualiza perfil, classificação e calendário após a transferência.
+
+O mercado de compra e venda do técnico, a artilharia, a consulta detalhada de outros clubes, a exclusão de carreiras e a aposentadoria manual estão disponíveis pela API, sem tela dedicada no frontend atual.
+
+### Como jogar
+
+1. Em **Nova carreira**, escolha técnico ou jogador e preencha os dados.
+2. No modo técnico, escolha uma formação e uma tática. Para trocar um titular, retire primeiro um atleta da mesma posição e selecione o reserva desejado.
+3. Confira os **11 titulares** e os limites de posições; use **Salvar escalação e tática** para persistir. A escalação automática prepara a seleção, mas também precisa ser salva.
+4. Simule as rodadas e acompanhe classificação e calendário.
+5. Após a rodada 14, use **Iniciar próxima temporada**.
+6. No modo jogador, consulte perfil e propostas. Aceite uma oferta somente após revisar o clube e o papel no elenco na confirmação.
 
 ## Regras do jogo
 
@@ -216,7 +249,7 @@ sudo apt install -y python3-venv nginx git
 
 sudo mkdir -p /opt/football-api
 sudo chown "$USER":"$USER" /opt/football-api
-git clone https://github.com/<USUARIO>/<REPOSITORIO>.git /opt/football-api
+git clone --branch master https://github.com/kauasoares/football-career-api.git /opt/football-api
 cd /opt/football-api
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
@@ -252,7 +285,7 @@ sudo systemctl enable --now football-api
 systemctl status football-api
 ```
 
-### 4. Nginx como proxy reverso
+### 4. Nginx para o frontend e a API
 
 Crie `/etc/nginx/sites-available/football-api`:
 
@@ -261,7 +294,14 @@ server {
     listen 80;
     server_name _;
 
+    root /opt/football-api/frontend;
+    index index.html;
+
     location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location ~ ^/(health|clubs|careers|docs|redoc|openapi\.json)(/|$) {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -280,11 +320,14 @@ sudo nginx -t
 sudo systemctl restart nginx
 ```
 
-### 5. Validação da API
+O bloco acima é uma configuração de referência, não uma alteração automática da VM. Ajuste o caminho `/opt/football-api` ao diretório realmente instalado, por exemplo `/opt/football-career-api`. O usuário do Nginx precisa conseguir ler o diretório `frontend/`. Não abra o HTML diretamente pelo protocolo `file://`: o frontend espera rotas HTTP da API na mesma origem.
+
+### 5. Validação do frontend e da API
 
 No navegador, Postman ou curl, utilize o IP público da VM:
 
 ```text
+http://<IP_PUBLICO>/
 http://<IP_PUBLICO>/health
 http://<IP_PUBLICO>/docs
 ```
@@ -305,6 +348,22 @@ Adicione uma execução diária às 02h:
 0 2 * * * DB_PATH=/opt/football-api/data/career.db BACKUP_DIR=/var/backups/football-api BACKUP_RETENTION_DAYS=14 /opt/football-api/.venv/bin/python /opt/football-api/backup_db.py >> /home/azureuser/football-api-backup.log 2>&1
 ```
 
+## Atualização do frontend na instalação existente
+
+Na pasta real do repositório na VM:
+
+```bash
+git pull origin master
+```
+
+Depois, recarregue o navegador com **Ctrl + F5**. Alterações somente nos arquivos estáticos não exigem reiniciar o backend quando o Nginx já serve diretamente a pasta `frontend/`.
+
+Se aparecer `version is not defined` ao continuar uma carreira, confirme que a instalação inclui o commit `dde372b` ou posterior e recarregue os scripts sem cache. Essa correção inicializa o controle de versão do carregamento do dashboard.
+
+## Documentação e evidências
+
+A documentação técnica está disponível em [Word](Football_Career_API_Documentacao_Tecnica.docx) e [PDF](Football_Career_API_Documentacao_Tecnica.pdf). Prints do ambiente devem ser apresentados com legenda e contexto, distinguindo a interface anterior da versão atual. Diagramas explicativos não substituem evidências de execução.
+
 ## Escopo acadêmico e observações
 
 A API não implementa cadastro de usuários nem autenticação. As rotas ficam abertas para facilitar os testes do professor por Swagger, Postman ou curl. O acesso HTTP sem TLS é utilizado apenas para a demonstração acadêmica, conforme o escopo do projeto. Não envie dados pessoais, senhas ou informações sensíveis pela API.
@@ -313,13 +372,13 @@ Mesmo em um projeto acadêmico, recomenda-se restringir a porta SSH (22) ao IP a
 
 ## Limitações e melhorias futuras
 
-- O projeto entregue é um backend REST; não foi enviado frontend gráfico de jogo.
+- O frontend cobre os fluxos descritos acima; algumas operações continuam disponíveis somente pela API.
 - SQLite é adequado para o escopo acadêmico, mas permite apenas uma escrita por vez e não foi projetado para escalar horizontalmente entre várias VMs.
 - Não há autenticação de usuários ou autorização por carreira; qualquer pessoa com acesso à API pode executar as operações disponíveis.
 - O ambiente demonstrativo utiliza HTTP, sem criptografia de transporte; HTTPS pode ser adicionado caso o projeto seja levado a um cenário público de produção.
 - Não há pipeline CI/CD nem ferramenta de migração versionada do esquema do banco.
 
-Evoluções possíveis: criar uma interface web, adicionar contas e permissões individuais, implementar logs e métricas, automatizar testes e publicação com GitHub Actions e migrar para PostgreSQL caso a concorrência e o volume de dados aumentem.
+Evoluções possíveis: ampliar a interface do mercado do técnico, adicionar contas e permissões individuais, implementar logs e métricas, automatizar testes e publicação com GitHub Actions e migrar para PostgreSQL caso a concorrência e o volume de dados aumentem.
 
 ## Estrutura de arquivos
 
@@ -331,6 +390,16 @@ football-career-api/
 ├── requirements-dev.txt
 ├── README.md
 ├── .gitignore
+├── frontend/
+│   ├── index.html
+│   ├── css/
+│   │   ├── style.css
+│   │   ├── tactics.css
+│   │   └── career.css
+│   └── js/
+│       ├── api.js
+│       ├── tactics.js
+│       └── player.js
 └── tests/
     └── test_api.py
 ```
