@@ -183,6 +183,7 @@ function stat(label, value) {
 }
 
 async function openCareer(id) {
+  const version = ++dashboardVersion;
   try {
     const career = await request(`/careers/${id}`);
     if (version !== dashboardVersion) return;
