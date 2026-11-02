@@ -370,7 +370,7 @@ Se aparecer `version is not defined` ao continuar uma carreira, confirme que a i
 
 ## Documentação e evidências
 
-A documentação técnica atualizada reúne arquitetura, contratos da API, manual dos modos técnico e jogador, configuração de referência, backup e evidências legendadas. A entrega revisada está disponível em [PDF](Football_Career_API_Documentacao_Tecnica.pdf). O arquivo Word existente no histórico do projeto é uma versão anterior e não integra esta revisão. Prints do ambiente devem ser apresentados com legenda e contexto, distinguindo a interface anterior da versão atual. Diagramas explicativos não substituem evidências de execução.
+A documentação técnica atualizada reúne arquitetura, contratos da API, manual dos modos técnico e jogador, configuração de referência, backup e evidências legendadas. O relatório técnico é entregue separadamente do código-fonte. Prints do ambiente devem ser apresentados com legenda e contexto, distinguindo a interface anterior da versão atual. Diagramas explicativos não substituem evidências de execução.
 
 ## Escopo acadêmico e observações
 
