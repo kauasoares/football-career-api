@@ -1,0 +1,30 @@
+/* Complementos: central tática e calendário */
+.squad-section{margin-top:35px}
+.tactics-panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px}
+.tactics-controls{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.tactical-field{min-height:460px;padding:22px 10px;background:repeating-linear-gradient(180deg,#184c35 0 68px,#20583e 68px 136px);border:2px solid #729c80;border-radius:9px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.tactical-field:before{content:"";position:absolute;inset:6% 3%;border:2px solid #d9f8da45;pointer-events:none}
+.tactical-field:after{content:"";width:110px;height:110px;border:2px solid #d9f8da45;border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
+.pitch-row{display:flex;justify-content:space-around;align-items:center;gap:4px;z-index:1;position:relative}
+.pitch-player{flex:1;min-width:0;max-width:110px;text-align:center}
+.pitch-shirt{margin:0 auto;width:47px;height:48px;border-radius:13px 13px 7px 7px;background:var(--green);color:#10210b;display:grid;place-items:center;font:900 23px "Barlow Condensed",sans-serif;box-shadow:0 5px 15px #0006}
+.pitch-player span{display:block;font-size:10px;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 4px #000}
+.tactics-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.tactics-actions .primary-btn{margin-top:0}
+.roster-feedback{color:var(--green);font-size:12px;min-height:20px;margin:12px 0}
+.roster-feedback.error,.invalid{color:#ff8b83!important}
+#selection-count{color:var(--muted);font-size:12px}
+.squad-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px}
+.roster-card{border:1px solid var(--line);border-radius:10px;background:linear-gradient(140deg,#1b302b,#111923);text-align:center;padding:16px 10px;color:var(--text);display:flex;flex-direction:column;align-items:center;gap:7px;min-height:170px}
+.roster-card:hover{border-color:var(--green)}
+.roster-card.on-field{border-color:#7eaa52;background:linear-gradient(150deg,#29422c,#101a21)}
+.roster-badge{font-size:9px;letter-spacing:1px;color:var(--green)}
+.roster-rating{font:900 44px "Barlow Condensed",sans-serif;color:var(--green);line-height:1}
+.roster-position,.roster-card small{font-size:10px;color:var(--muted)}
+.roster-card strong{font-size:12px;overflow-wrap:anywhere}
+.fixtures-list{display:grid;gap:8px}
+.fixture-item{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.fixture-round{min-width:75px;font-size:10px;letter-spacing:1px;color:var(--green)}
+.fixture-item strong{flex:1;text-align:center;font-size:12px}
+.fixture-score{color:#fff;font-size:12px;min-width:64px;text-align:right}
+@media(max-width:650px){.tactics-controls{grid-template-columns:1fr}.tactical-field{min-height:360px;padding:20px 5px}.pitch-shirt{width:34px;height:37px;font-size:16px}.pitch-player span{font-size:8px}.fixture-item{flex-wrap:wrap}.fixture-round{min-width:auto}}
